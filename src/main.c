@@ -14,12 +14,12 @@ int main(int argc, char *argv)
         "dirty8 emulator",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        CHIP8_WIDTH * 10,
-        CHIP8_HEIGHT * 10,
+        CHIP8_WIDTH * CHIP8_WINDOW_MULTIPLIER,
+        CHIP8_HEIGHT * CHIP8_WINDOW_MULTIPLIER,
         SDL_WINDOW_SHOWN
     );
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window,-1, SDL_TEXTUREACCESS_TARGET);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_TEXTUREACCESS_TARGET);
 
     SDL_Event event;
     while (!quit)
