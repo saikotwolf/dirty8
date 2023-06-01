@@ -1,5 +1,78 @@
-# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,sublimetext,linux,windows,macos,vim,emacs,dotenv,notepadpp,git
-# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,visualstudio,sublimetext,linux,windows,macos,vim,emacs,dotenv,notepadpp,git
+# Created by https://www.toptal.com/developers/gitignore/api/git,vim,emacs,linux,macos,dotenv,windows,notepadpp,sublimetext,visualstudio,visualstudiocode,c,c++
+# Edit at https://www.toptal.com/developers/gitignore?templates=git,vim,emacs,linux,macos,dotenv,windows,notepadpp,sublimetext,visualstudio,visualstudiocode,c,c++
+
+### C ###
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+### C++ ###
+# Prerequisites
+
+# Compiled Object files
+*.slo
+
+# Precompiled Headers
+
+# Compiled Dynamic libraries
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+
+# Executables
 
 ### dotenv ###
 .env
@@ -193,12 +266,6 @@ tags
 .history
 .ionide
 
-# Support for Project snippet scope
-.vscode/*.code-snippets
-
-# Ignore code-workspaces
-*.code-workspace
-
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
@@ -300,12 +367,8 @@ StyleCopReport.xml
 *_i.c
 *_p.c
 *_h.h
-*.ilk
 *.meta
-*.obj
 *.iobj
-*.pch
-*.pdb
 *.ipdb
 *.pgc
 *.pgd
@@ -602,6 +665,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
+*.code-workspace
 
 # Local History for Visual Studio Code
 
@@ -613,4 +677,4 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,sublimetext,linux,windows,macos,vim,emacs,dotenv,notepadpp,git
+# End of https://www.toptal.com/developers/gitignore/api/git,vim,emacs,linux,macos,dotenv,windows,notepadpp,sublimetext,visualstudio,visualstudiocode,c,c++
