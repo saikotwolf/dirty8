@@ -9,3 +9,9 @@ dirty8 is a chip8 emulator.
         </td>
     </tr>
 </table>
+
+# IN PROGRESS
+
+This project is in progress yet.
+
+Only linux support at the moment.
