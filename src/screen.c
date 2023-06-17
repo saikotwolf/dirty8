@@ -1,4 +1,10 @@
 #include "screen.h"
+#include "string.h"
+
+void chip8_screen_clear(chip8_screen *screen)
+{
+    memset(screen->pixels, 0, sizeof(screen->pixels));
+}
 
 void chip8_screen_set(chip8_screen *screen, int x, int y)
 {
