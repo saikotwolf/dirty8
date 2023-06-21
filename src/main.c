@@ -3,12 +3,33 @@
 #include <stdio.h>
 #include "chip8.h"
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
-    printf("IN PROGRESS!\n");
+    if (argc < 2) {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return -1;
+    }
+
+    const char *filename = argv[1];
+    printf("The filename to load is: %s\n", filename);
+
+    FILE * f = fopen(filename, "rb");
+    if (!f)
+    {
+        printf("Failed to open the file");
+        return -1;
+    }
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    rewind(f);
+
+    char buf[size];
+    fread(buf, size, 1, f);
+    fclose(f);
 
     struct chip8_context chip8;
     chip8_init(&chip8);
+    chip8_load(&chip8, buf, size);
 
     bool quit = false;
 
@@ -56,6 +77,21 @@ int main(int argc, char *argv)
         }
         
         SDL_RenderPresent(renderer);
+
+        unsigned short opcode = chip8_memory_get_opcode(&chip8.memory, chip8.registers.PC);
+
+        chip8.registers.PC +=2;
+        
+        chip8_exec(&chip8, opcode);
+
+        if(chip8.registers.delay_timer > 0)
+        {
+            chip8.registers.delay_timer -= 1;
+        }
+        if(chip8.registers.sound_timer > 0)
+        {
+            chip8.registers.sound_timer = 0;
+        }
     }
     
     SDL_DestroyWindow(window);
