@@ -2,7 +2,7 @@ INCLUDES = -I include/ -I /usr/include/SDL2/
 FLAGS = -g
 SDLFLAG = -lSDL2
 DIRS = bin build
-OBJECTS = build/chip8.o build/stack.o build/memory.o build/screen.o
+OBJECTS = build/chip8.o build/stack.o build/memory.o build/screen.o build/keyboard.o
 
 all: directories ${OBJECTS}
 	gcc ${FLAGS} ${INCLUDES} src/main.c ${OBJECTS} -o bin/main ${SDLFLAG}
@@ -21,6 +21,9 @@ build/memory.o:src/memory.c
 
 build/screen.o:src/screen.c
 	gcc ${FLAGS} ${INCLUDES} src/screen.c -c -o build/screen.o
+
+build/keyboard.o:src/keyboard.c
+	gcc ${FLAGS} ${INCLUDES} src/keyboard.c -c -o build/keyboard.o
 
 clean:
 	rm -rf bin/ build/
