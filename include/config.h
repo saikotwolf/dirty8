@@ -13,4 +13,6 @@
 
 #define CHIP8_PROGRAM_LOAD_ADDRESS 0x200
 
+#define CHIP8_TOTAL_KEYS 16
+
 #endif
