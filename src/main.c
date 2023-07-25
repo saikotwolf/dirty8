@@ -2,6 +2,35 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "chip8.h"
+#include <unistd.h>
+
+const char keyboard_map[CHIP8_TOTAL_KEYS] = {
+    SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
+    SDLK_6, SDLK_7, SDLK_8, SDLK_9, SDLK_a, SDLK_b,
+    SDLK_c, SDLK_d, SDLK_e, SDLK_f};
+
+void beep(){
+    // Load Wav file.
+    SDL_AudioSpec wavSpec;
+    Uint32 wavLength;
+    Uint8 *wavBuffer;
+
+    SDL_LoadWAV("sounds/beep.wav", &wavSpec, &wavBuffer, &wavLength);
+
+    // Open audio device.
+    SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+
+    // Play audio.
+    int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+    SDL_PauseAudioDevice(deviceId, 0);
+
+    // Keep program running.
+    SDL_Delay(120);
+
+    // Clean up.
+    SDL_CloseAudioDevice(deviceId);
+    SDL_FreeWAV(wavBuffer);
+}
 
 int main(int argc, char *argv[])
 {
@@ -30,10 +59,11 @@ int main(int argc, char *argv[])
     struct chip8_context chip8;
     chip8_init(&chip8);
     chip8_load(&chip8, buf, size);
+    chip8_keyboard_set_map(&chip8.keyboard, keyboard_map);
 
     bool quit = false;
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
     SDL_Window *window = SDL_CreateWindow(
         CHIP8_WINDOW_TITLE,
         SDL_WINDOWPOS_UNDEFINED,
@@ -53,6 +83,28 @@ int main(int argc, char *argv[])
         {
             case SDL_QUIT:
                 quit = true;
+            break;
+
+            case SDL_KEYDOWN:
+            {
+                char key = event.key.keysym.sym;
+                int vkey = chip8_keyboard_map(&chip8.keyboard, key);
+                if (vkey != -1)
+                {
+                    chip8_keyboard_down(&chip8.keyboard, vkey);
+                }
+            }
+            break;
+
+            case SDL_KEYUP:
+            {
+                char key = event.key.keysym.sym;
+                int vkey = chip8_keyboard_map(&chip8.keyboard, key);
+                if (vkey != -1)
+                {
+                    chip8_keyboard_up(&chip8.keyboard, vkey);
+                }
+            }
             break;
         }
 
@@ -88,8 +140,12 @@ int main(int argc, char *argv[])
         {
             chip8.registers.delay_timer -= 1;
         }
+
+        usleep(475);
+
         if(chip8.registers.sound_timer > 0)
         {
+            beep();
             chip8.registers.sound_timer = 0;
         }
     }
