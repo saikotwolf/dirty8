@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "screen.h"
 #include "stack.h"
+#include "keyboard.h"
 #include <stddef.h>
 
 struct chip8_context
@@ -14,6 +15,7 @@ struct chip8_context
     chip8_stack stack;
     chip8_memory memory;
     chip8_screen screen;
+    chip8_keyboard keyboard;
 };
 
 void chip8_init(struct chip8_context *chip8);

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include "SDL2/SDL.h"
 
 const char chip8_character_set[] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0,
@@ -35,10 +36,27 @@ void chip8_load(struct chip8_context *chip8, const char* buf, size_t size)
     chip8->registers.PC = CHIP8_PROGRAM_LOAD_ADDRESS;
 }
 
+static char chip8_wait_for_key_press(struct chip8_context *chip8)
+{
+    SDL_Event event;
+    while(SDL_WaitEvent(&event))
+    {
+        if (event.type != SDL_KEYDOWN)
+            continue;
+        char c = event.key.keysym.sym;
+        char chip8_key = chip8_keyboard_map(&chip8->keyboard, c);
+        if (chip8_key != -1)
+        {
+            return chip8_key;
+        }
+    }
+    return -1;
+}
+
 static void chip8_exec_extended_F(struct chip8_context *chip8, unsigned short opcode)
 {
-    unsigned char x = (opcode >> 8) & 0x000f;
-    switch (opcode & 0x00ff)
+    unsigned char x = (opcode >> 8) & 0x000F;
+    switch (opcode & 0x00FF)
     {
         // Fx07: LD Vx, DT | Set Vx = delay timer value.
         case 0x07:
@@ -47,7 +65,10 @@ static void chip8_exec_extended_F(struct chip8_context *chip8, unsigned short op
 
         // Fx0A: LD Vx, K | Wait for a key press, store the value of the key in Vx.
         case 0x0A:
-            printf("NOT IMPLEMENTED YET\n");
+        {
+            char pressed_key = chip8_wait_for_key_press(chip8);
+            chip8->registers.V[x] = pressed_key;
+        }
         break;
 
         // Fx15: LD DT, Vx | Set delay timer = Vx.
@@ -106,11 +127,11 @@ static void chip8_exec_extended_F(struct chip8_context *chip8, unsigned short op
 
 static void chip8_exec_extended_eight(struct chip8_context *chip8, unsigned short opcode)
 {
-    unsigned char x = (opcode >> 8) & 0x000f;
-    unsigned char y = (opcode >> 4) & 0x000f;
-    unsigned short tmp;
+    unsigned char x = (opcode >> 8) & 0x000F;
+    unsigned char y = (opcode >> 4) & 0x000F;
+    unsigned short tmp = 0;
 
-    switch(opcode & 0x000f)
+    switch(opcode & 0x000F)
     {
         // 8xy0: LD Vx, Vy | Set Vx = Vy.
         case 0x00:
@@ -134,8 +155,8 @@ static void chip8_exec_extended_eight(struct chip8_context *chip8, unsigned shor
 
         // 8xy4: ADD Vx, Vy | Set Vx = Vx ADD Vy , set VF = carry.
         case 0x04:
+            tmp = chip8->registers.V[x] + chip8->registers.V[y];
             chip8->registers.V[0x0F] = false;
-            tmp = chip8->registers.V[x] + chip8->registers.V[x];
             if(tmp > 0xFF)
             {
                 chip8->registers.V[0x0F] = true;
@@ -145,25 +166,25 @@ static void chip8_exec_extended_eight(struct chip8_context *chip8, unsigned shor
 
         // 8xy5: SUB Vx, Vy | Set Vx = Vx - Vy, set VF = NOT borrow.
         case 0x05:
-            chip8->registers.V[0x0f] = chip8->registers.V[x] > chip8->registers.V[y];
+            chip8->registers.V[0x0F] = chip8->registers.V[x] > chip8->registers.V[y];
             chip8->registers.V[x] -= chip8->registers.V[y];
         break;
 
         // 8xy6: SHR Vx {, Vy} | Set Vx = Vx SHR 1.
         case 0x06:
-            chip8->registers.V[0x0F] = chip8->registers.V[x]& 0b00000001;
+            chip8->registers.V[0x0F] = chip8->registers.V[x] & 0x01;
             chip8->registers.V[x] /= 2;
         break;
 
         // 8xy7: SUBN Vx, Vy | Set Vx = Vy - Vx, set VF = NOT borrow.
         case 0x07:
-            chip8->registers.V[0x0f] = chip8->registers.V[y] > chip8->registers.V[x];
+            chip8->registers.V[0x0F] = chip8->registers.V[y] > chip8->registers.V[x];
             chip8->registers.V[x] = chip8->registers.V[y] - chip8->registers.V[x];
         break;
 
         // 8xyE: SHL Vx {, Vy} | Set Vx = Vx SHL 1.
         case 0x0E:
-            chip8->registers.V[0x0f] = chip8->registers.V[x] & 0b10000000;
+            chip8->registers.V[0x0F] = chip8->registers.V[x] & 0b10000000;
             chip8->registers.V[x] *= 2;
         break;
     }
@@ -172,13 +193,13 @@ static void chip8_exec_extended_eight(struct chip8_context *chip8, unsigned shor
 
 static void chip8_exec_extended(struct chip8_context *chip8, unsigned short opcode)
 {
-    unsigned short nnn = opcode & 0x0fff;
-    unsigned char x = (opcode >> 8) & 0x000f;
-    unsigned char y = (opcode >> 4) & 0x000f;
-    unsigned char kk = opcode & 0x00ff;
-    unsigned char n = opcode & 0x000f;
+    unsigned short nnn = opcode & 0x0FFF;
+    unsigned char x = (opcode >> 8) & 0x000F;
+    unsigned char y = (opcode >> 4) & 0x000F;
+    unsigned char kk = opcode & 0x00FF;
+    unsigned char n = opcode & 0x000F;
 
-    switch(opcode & 0xf000)
+    switch(opcode & 0xF000)
     {
         // 1nnn: JP addr | Jump to location nnn.
         case 0x1000:
@@ -250,17 +271,40 @@ static void chip8_exec_extended(struct chip8_context *chip8, unsigned short opco
 
         // Cxkk: RND Vx, byte | Set Vx = random byte AND kk.
         case 0xC000:
-            srand(time(NULL));
-            chip8->registers.V[x] = (rand() % 256) & kk;
+            srand(clock());
+            chip8->registers.V[x] = (rand() % 255) & kk;
         break;
 
         // Dxyn: DRW Vx, Vy, nibble | Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
         case 0xD000:
         {
             const char* sprite = (const char*) &chip8->memory.memory[chip8->registers.I];
-            chip8_screen_draw_sprite(&chip8->screen, chip8->registers.V[x], chip8->registers.V[y], sprite, n);
+            chip8->registers.V[0x0F] = chip8_screen_draw_sprite(&chip8->screen, chip8->registers.V[x], chip8->registers.V[y], sprite, n);
         }
         break;
+
+        // Keyboard operations.
+        case 0xE000:
+        {
+            switch (opcode & 0x00FF)
+            {
+                // Ex9E: SKP Vx | Skip the next instruction if the key with the value of Vx is pressed
+                case 0x9E:
+                    if (chip8_keyboard_is_down(&chip8->keyboard, chip8->registers.V[x]))
+                    {
+                        chip8->registers.PC += 2;
+                    }
+                break;
+
+                // ExA1: SKNP Vx | Skip the next instruction if the key with the value of Vx is not pressed
+                case 0xA1:
+                    if (!chip8_keyboard_is_down(&chip8->keyboard, chip8->registers.V[x]))
+                    {
+                        chip8->registers.PC += 2;
+                    }
+                break;
+            }
+        }
 
         // Extended F instructions.
         case 0xF000:
@@ -273,12 +317,12 @@ void chip8_exec(struct chip8_context *chip8, unsigned short opcode)
 {
     switch(opcode)
     {
-        // CLS: Clear the display.
+        // 0x0E0 CLS: Clear the display.
         case 0x00E0:
             chip8_screen_clear(&chip8->screen);
         break;
 
-        // RET: Return from a subroutine.
+        // 0x0EE RET: Return from a subroutine.
         case 0x00EE:
             chip8->registers.PC = chip8_stack_pop(chip8);
         break;
